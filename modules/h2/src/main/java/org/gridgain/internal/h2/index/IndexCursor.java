@@ -91,10 +91,13 @@ public class IndexCursor implements Cursor, AutoCloseable {
             if (condition.getCompareType() == Comparison.IN_LIST) {
                 if (start == null && end == null) {
                     if (canUseIndexForIn(column)) {
+                        System.out.println(">xxx> optimized branch");
                         this.inColumn = column;
                         inList = condition.getCurrentValueList(s);
                         inListIndex = 0;
                     }
+                    else
+                        System.out.println(">xxx> not optimized :(");
                 }
             } else if (condition.getCompareType() == Comparison.IN_QUERY) {
                 if (start == null && end == null) {

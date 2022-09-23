@@ -27,7 +27,7 @@ public class SqlConfiguration {
     public static final int DFLT_SQL_QUERY_HISTORY_SIZE = 1000;
 
     /** Default timeout after which long query warning will be printed. */
-    public static final long DFLT_LONG_QRY_WARN_TIMEOUT = 1000;
+    public static final long DFLT_LONG_QRY_WARN_TIMEOUT = 100;
 
     /** Default SQL query global memory quota. */
     public static final String DFLT_SQL_QUERY_GLOBAL_MEMORY_QUOTA = "60%"; // 60% of heap.

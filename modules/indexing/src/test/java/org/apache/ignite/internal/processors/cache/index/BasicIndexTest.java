@@ -232,12 +232,22 @@ public class BasicIndexTest extends AbstractIndexingCommonTest {
     }
 
     @Test
-    public void test0() throws Exception {
+    public void test0_NonOptimal() throws Exception {
+        doTest0("SELECT * FROM PUBLIC.TEST_TABLE USE INDEX(PK_IDX) WHERE f1 = 8 and f2 in (1, 5, 10, 49)");
+    }
+
+    @Test
+    public void test0_Optimal() throws Exception {
+        doTest0("SELECT * FROM PUBLIC.TEST_TABLE USE INDEX(PK_IDX) WHERE f1 in (1, 5, 10, 49)");
+    }
+
+
+    private void doTest0(String sql) throws Exception {
         inlineSize = 20;
 
         srvLog = new ListeningTestLogger(log);
 
-        IgniteEx ig0 = startGrids(3);
+        IgniteEx ig0 = startGrids(1);
 
         IgniteEx cli = startClientGrid("cli");
 
@@ -252,11 +262,11 @@ public class BasicIndexTest extends AbstractIndexingCommonTest {
 
         String insert = "INSERT INTO PUBLIC.TEST_TABLE (f1, f2, f3) values (%d, %d, 2)";
 
-        String selectWithoutIn = "SELECT * FROM PUBLIC.TEST_TABLE USE INDEX(PK_IDX) WHERE f1 = 8 and f2 = 50";
+//        String selectWithoutIn = "SELECT * FROM PUBLIC.TEST_TABLE USE INDEX(PK_IDX) WHERE f1 = 8 and f2 = 50";
 
-        //String selectWithIn = "SELECT * FROM PUBLIC.TEST_TABLE USE INDEX(PK_IDX) WHERE f1 = 8 and f2 in (1, 5, 10, 49)";
+//        String selectWithIn = "SELECT * FROM PUBLIC.TEST_TABLE USE INDEX(PK_IDX) WHERE f1 = 8 and f2 in (1, 5, 10, 49)";
 
-        String selectWithIn = "SELECT * FROM PUBLIC.TEST_TABLE USE INDEX(PK_IDX) WHERE f1 in (1, 5, 10, 29)";
+//        String selectWithIn = "SELECT * FROM PUBLIC.TEST_TABLE USE INDEX(PK_IDX) WHERE f1 in (1, 5, 10, 49)";
 
         //String selectWithIn = "SELECT * FROM PUBLIC.TEST_TABLE USE INDEX(PK_IDX) WHERE (f1 > 8 and f1 < 10) and (f2 > 5 and f2 < 49)";
 
@@ -266,20 +276,26 @@ public class BasicIndexTest extends AbstractIndexingCommonTest {
         qryProc.querySqlFields(new SqlFieldsQuery(create), true);
 
         for (int i = 0; i < 30; ++i)
-            for (int j = 0; j < 50; ++j)
+            for (int j = 0; j < 100; ++j)
                 qryProc.querySqlFields(new SqlFieldsQuery(String.format(insert, i, j)), true);
 
         GridQueryProcessor cliQryProc = cli.context().query();
 
         cliQryProc.querySqlFields(new SqlFieldsQuery(createIdx), true).getAll();
 
-/*        FieldsQueryCursor<List<?>> res = cliQryProc.querySqlFields(new SqlFieldsQuery(selectWithoutIn), true);
+//        FieldsQueryCursor<List<?>> res = cliQryProc.querySqlFields(new SqlFieldsQuery(selectWithoutIn), true);
+//
+//        System.err.println("!!! not in: " + res.getAll().get(0));
 
-        System.err.println("!!! not in: " + res.getAll().get(0));*/
-
-        FieldsQueryCursor<List<?>> res1 = cliQryProc.querySqlFields(new SqlFieldsQuery(selectWithIn), true);
+        FieldsQueryCursor<List<?>> res1 = cliQryProc.querySqlFields(new SqlFieldsQuery(sql), true);
 
         System.err.println("!!! with in: " + res1.getAll().size());
+
+//        String plan = cliQryProc.querySqlFields(new SqlFieldsQuery("explain " + selectWithIn), true)
+//            .getAll().get(0).get(0).toString().toLowerCase();
+//
+//        System.out.println(">xxx> plan");
+//        System.out.println(plan);
     }
 
     @Test
